@@ -25,8 +25,8 @@ type PersistedControls = {
   solveMode: SolveMode;
   targetMassKg: number;
   outerDiameterCm: number;
-  widthCm: number;
-  openingDiameterCm: number;
+  widthMm: number;
+  openingDiameterMm: number;
   concreteDensity: number;
   innerRingEnabled: boolean;
   innerRingThicknessMm: number;
@@ -43,6 +43,14 @@ function round(value: number, digits = 2) {
 
 function formatCm(value: number) {
   return `${round(value, 1).toFixed(1)} cm`;
+}
+
+function formatMm(value: number) {
+  return `${round(value, 1).toFixed(1)} mm`;
+}
+
+function formatMeters(value: number) {
+  return `${round(value, 3).toFixed(3)} m`;
 }
 
 function formatKg(value: number) {
@@ -98,8 +106,8 @@ export default function Home() {
   const [solveMode, setSolveMode] = useState<SolveMode>("width");
   const [targetMassKg, setTargetMassKg] = useState(20);
   const [outerDiameterCm, setOuterDiameterCm] = useState(34);
-  const [widthCm, setWidthCm] = useState(5);
-  const [openingDiameterCm, setOpeningDiameterCm] = useState(5.2);
+  const [widthMm, setWidthMm] = useState(50);
+  const [openingDiameterMm, setOpeningDiameterMm] = useState(52);
   const [concreteDensity, setConcreteDensity] = useState(CONCRETE_DENSITY_DEFAULT);
 
   const [innerRingEnabled, setInnerRingEnabled] = useState(true);
@@ -131,11 +139,11 @@ export default function Home() {
       if (typeof parsed.outerDiameterCm === "number") {
         setOuterDiameterCm(parsed.outerDiameterCm);
       }
-      if (typeof parsed.widthCm === "number") {
-        setWidthCm(parsed.widthCm);
+      if (typeof parsed.widthMm === "number") {
+        setWidthMm(parsed.widthMm);
       }
-      if (typeof parsed.openingDiameterCm === "number") {
-        setOpeningDiameterCm(parsed.openingDiameterCm);
+      if (typeof parsed.openingDiameterMm === "number") {
+        setOpeningDiameterMm(parsed.openingDiameterMm);
       }
       if (typeof parsed.concreteDensity === "number") {
         setConcreteDensity(parsed.concreteDensity);
@@ -177,8 +185,8 @@ export default function Home() {
       solveMode,
       targetMassKg,
       outerDiameterCm,
-      widthCm,
-      openingDiameterCm,
+      widthMm,
+      openingDiameterMm,
       concreteDensity,
       innerRingEnabled,
       innerRingThicknessMm,
@@ -195,7 +203,7 @@ export default function Home() {
     hasLoadedSavedControls,
     innerRingEnabled,
     innerRingThicknessMm,
-    openingDiameterCm,
+    openingDiameterMm,
     outerDiameterCm,
     outerRingEnabled,
     outerRingThicknessMm,
@@ -204,12 +212,12 @@ export default function Home() {
     reinforcementEnabled,
     solveMode,
     targetMassKg,
-    widthCm,
+    widthMm,
   ]);
 
-  const holeRadiusM = (openingDiameterCm * CM_TO_M) / 2;
+  const holeRadiusM = (openingDiameterMm * MM_TO_M) / 2;
   const outerRadiusInputM = (outerDiameterCm * CM_TO_M) / 2;
-  const widthInputM = widthCm * CM_TO_M;
+  const widthInputM = widthMm * MM_TO_M;
   const innerRingThicknessM = innerRingEnabled ? innerRingThicknessMm * MM_TO_M : 0;
   const outerRingThicknessM = outerRingEnabled ? outerRingThicknessMm * MM_TO_M : 0;
   const reinforcementRadiusM = reinforcementEnabled
@@ -276,11 +284,11 @@ export default function Home() {
   }
 
   const solvedOuterDiameterCm = solvedOuterRadiusM / CM_TO_M * 2;
-  const solvedWidthCm = solvedWidthM / CM_TO_M;
   const activeOuterRadiusM = solveMode === "width" ? outerRadiusInputM : solvedOuterRadiusM;
   const activeWidthM = solveMode === "width" ? solvedWidthM : widthInputM;
   const activeOuterDiameterCm = solveMode === "width" ? outerDiameterCm : solvedOuterDiameterCm;
-  const activeWidthCm = solveMode === "width" ? solvedWidthCm : widthCm;
+  const activeWidthMm = activeWidthM / MM_TO_M;
+  const outerCircumferenceM = 2 * Math.PI * activeOuterRadiusM;
 
   if (!error && activeOuterRadiusM <= holeRadiusM) {
     error = "Outer diameter must be larger than the inner opening.";
@@ -297,6 +305,7 @@ export default function Home() {
   const reinforcementLengthM = !error
     ? Math.max(activeOuterRadiusM - reinforcementOuterOffsetM - reinforcementStartRadiusM, 0)
     : 0;
+  const reinforcementLengthMm = reinforcementLengthM / MM_TO_M;
   if (!error && reinforcementEnabled && reinforcementLengthM <= 0) {
     error = "There is no radial span available for the reinforcement rods.";
   }
@@ -352,7 +361,7 @@ export default function Home() {
           </div>
           <div>
             <span>Solved width</span>
-            <strong>{formatCm(activeWidthCm)}</strong>
+            <strong>{formatMm(activeWidthMm)}</strong>
           </div>
         </div>
       </section>
@@ -392,21 +401,21 @@ export default function Home() {
           />
           <Slider
             label="Inner opening diameter"
-            value={openingDiameterCm}
-            min={2.5}
-            max={8}
-            step={0.1}
-            unit=" cm"
-            onChange={setOpeningDiameterCm}
+            value={openingDiameterMm}
+            min={25}
+            max={80}
+            step={1}
+            unit=" mm"
+            onChange={setOpeningDiameterMm}
           />
           <Slider
             label={solveMode === "width" ? "Outer diameter" : "Plate width"}
-            value={solveMode === "width" ? outerDiameterCm : widthCm}
-            min={solveMode === "width" ? 16 : 2}
-            max={solveMode === "width" ? 60 : 12}
-            step={0.1}
-            unit=" cm"
-            onChange={solveMode === "width" ? setOuterDiameterCm : setWidthCm}
+            value={solveMode === "width" ? outerDiameterCm : widthMm}
+            min={solveMode === "width" ? 16 : 20}
+            max={solveMode === "width" ? 60 : 120}
+            step={solveMode === "width" ? 0.1 : 1}
+            unit={solveMode === "width" ? " cm" : " mm"}
+            onChange={solveMode === "width" ? setOuterDiameterCm : setWidthMm}
           />
           <Slider
             label="Concrete density"
@@ -515,7 +524,15 @@ export default function Home() {
             </div>
             <div className="result-card">
               <span>Plate width</span>
-              <strong>{formatCm(activeWidthCm)}</strong>
+              <strong>{formatMm(activeWidthMm)}</strong>
+            </div>
+            <div className="result-card">
+              <span>Outer circumference</span>
+              <strong>{formatMeters(outerCircumferenceM)}</strong>
+            </div>
+            <div className="result-card">
+              <span>Reinforcement rod length</span>
+              <strong>{reinforcementEnabled ? formatMm(reinforcementLengthMm) : "Not used"}</strong>
             </div>
             <div className="result-card">
               <span>Total mass</span>

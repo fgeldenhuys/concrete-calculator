@@ -7,7 +7,7 @@ The app lets a user:
 - choose a target mass in kilograms
 - work only in metric units
 - specify either plate width or outer diameter
-- set plate and opening dimensions in centimeters, with steel sizes in millimeters
+- set outer diameter in centimeters, with plate width, inner opening, and steel sizes in millimeters
 - have the remaining dimension solved automatically
 - include or exclude optional steel parts
 - adjust values with sliders to explore different shapes quickly
@@ -118,7 +118,7 @@ npx wrangler login
 ## Assumptions And Limits
 
 - metric units only
-- plate and opening dimensions use centimeters, steel thicknesses and rod diameter use millimeters
+- outer diameter uses centimeters, while plate width, inner opening, steel thicknesses, and rod diameter use millimeters
 - densities are simplified constant values
 - reinforcement is modeled as radial steel bars embedded in the plate face
 - the app is frontend only and performs all calculations client-side
