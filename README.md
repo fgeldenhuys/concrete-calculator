@@ -2,6 +2,8 @@
 
 A small frontend-only Next.js application for designing cylindrical training weights made from concrete with optional steel components.
 
+Live deployment: `https://concrete.francois.online/`
+
 The app lets a user:
 
 - choose a target mass in kilograms
