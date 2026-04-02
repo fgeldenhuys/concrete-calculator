@@ -48,10 +48,12 @@ type PersistedControls = {
   kettlebellHandleEmbedMm: number;
   kettlebellPipeOuterDiameterMm: number;
   kettlebellPipeWallThicknessMm: number;
+  kettlebellHandleFilledWithConcrete: boolean;
 };
 
 type KettlebellMetrics = {
   concreteBodyVolumeM3: number;
+  concreteInHandleVolumeM3: number;
   concreteVolumeM3: number;
   steelVolumeM3: number;
   displacedConcreteVolumeM3: number;
@@ -139,6 +141,7 @@ function solveKettlebellDiameterM(
   handleEmbedM: number,
   pipeOuterRadiusM: number,
   pipeWallM: number,
+  handleFilledWithConcrete: boolean,
 ) {
   const wallError = pipeWallM <= 0 || pipeWallM >= pipeOuterRadiusM;
   if (wallError || concreteDensity <= 0 || targetMassKg <= 0) {
@@ -146,10 +149,14 @@ function solveKettlebellDiameterM(
   }
 
   const steelAreaM2 = Math.PI * (pipeOuterRadiusM ** 2 - (pipeOuterRadiusM - pipeWallM) ** 2);
+  const pipeInnerAreaM2 = Math.PI * (pipeOuterRadiusM - pipeWallM) ** 2;
   const pipeOuterAreaM2 = Math.PI * pipeOuterRadiusM ** 2;
   const handleTotalLengthM = handleLengthM + 2 * (handleHeightM + handleEmbedM);
   const steelVolumeM3 = steelAreaM2 * handleTotalLengthM;
   const displacedByLegsM3 = pipeOuterAreaM2 * (2 * handleEmbedM);
+  const concreteInHandleVolumeM3 = handleFilledWithConcrete
+    ? pipeInnerAreaM2 * handleTotalLengthM
+    : 0;
   const steelMassKg = steelVolumeM3 * STEEL_DENSITY;
 
   const massAtDiameter = (diameterM: number) => {
@@ -161,9 +168,10 @@ function solveKettlebellDiameterM(
     const sphereVolumeM3 = (4 / 3) * Math.PI * radiusM ** 3;
     const removedCapM3 = sphereCapVolume(radiusM, flattenM);
     const concreteBodyVolumeM3 = sphereVolumeM3 - removedCapM3;
-    const concreteVolumeM3 = concreteBodyVolumeM3 - displacedByLegsM3;
+    const concreteBodyNetVolumeM3 = concreteBodyVolumeM3 - displacedByLegsM3;
+    const concreteVolumeM3 = concreteBodyNetVolumeM3 + concreteInHandleVolumeM3;
 
-    if (concreteVolumeM3 <= 0) {
+    if (concreteBodyNetVolumeM3 <= 0 || concreteVolumeM3 <= 0) {
       return null;
     }
 
@@ -233,6 +241,7 @@ function computeKettlebellMetrics(
   handleEmbedM: number,
   pipeOuterRadiusM: number,
   pipeWallM: number,
+  handleFilledWithConcrete: boolean,
 ) {
   if (diameterM <= 0 || concreteDensity <= 0) {
     return { error: "Sphere diameter and concrete density must be above zero." };
@@ -261,14 +270,19 @@ function computeKettlebellMetrics(
 
   const steelAreaM2 =
     Math.PI * (pipeOuterRadiusM ** 2 - (pipeOuterRadiusM - pipeWallM) ** 2);
+  const pipeInnerAreaM2 = Math.PI * (pipeOuterRadiusM - pipeWallM) ** 2;
   const pipeOuterAreaM2 = Math.PI * pipeOuterRadiusM ** 2;
 
   const handleLengthMTotal = handleLengthM + 2 * (handleHeightM + handleEmbedM);
   const steelVolumeM3 = steelAreaM2 * handleLengthMTotal;
   const displacedConcreteVolumeM3 = pipeOuterAreaM2 * (2 * handleEmbedM);
-  const concreteVolumeM3 = concreteBodyVolumeM3 - displacedConcreteVolumeM3;
+  const concreteBodyNetVolumeM3 = concreteBodyVolumeM3 - displacedConcreteVolumeM3;
+  const concreteInHandleVolumeM3 = handleFilledWithConcrete
+    ? pipeInnerAreaM2 * handleLengthMTotal
+    : 0;
+  const concreteVolumeM3 = concreteBodyNetVolumeM3 + concreteInHandleVolumeM3;
 
-  if (concreteVolumeM3 <= 0) {
+  if (concreteBodyNetVolumeM3 <= 0 || concreteVolumeM3 <= 0) {
     return {
       error:
         "Embedded pipe displaces the full concrete body. Reduce embed depth or increase sphere size.",
@@ -283,6 +297,7 @@ function computeKettlebellMetrics(
   return {
     metrics: {
       concreteBodyVolumeM3,
+      concreteInHandleVolumeM3,
       concreteVolumeM3,
       steelVolumeM3,
       displacedConcreteVolumeM3,
@@ -329,6 +344,8 @@ export default function Home() {
   const [kettlebellHandleEmbedMm, setKettlebellHandleEmbedMm] = useState(45);
   const [kettlebellPipeOuterDiameterMm, setKettlebellPipeOuterDiameterMm] = useState(28);
   const [kettlebellPipeWallThicknessMm, setKettlebellPipeWallThicknessMm] = useState(2.6);
+  const [kettlebellHandleFilledWithConcrete, setKettlebellHandleFilledWithConcrete] =
+    useState(false);
 
   useEffect(() => {
     try {
@@ -412,6 +429,9 @@ export default function Home() {
       if (typeof parsed.kettlebellPipeWallThicknessMm === "number") {
         setKettlebellPipeWallThicknessMm(parsed.kettlebellPipeWallThicknessMm);
       }
+      if (typeof parsed.kettlebellHandleFilledWithConcrete === "boolean") {
+        setKettlebellHandleFilledWithConcrete(parsed.kettlebellHandleFilledWithConcrete);
+      }
     } catch {
       window.localStorage.removeItem(STORAGE_KEY);
     } finally {
@@ -449,6 +469,7 @@ export default function Home() {
       kettlebellHandleEmbedMm,
       kettlebellPipeOuterDiameterMm,
       kettlebellPipeWallThicknessMm,
+      kettlebellHandleFilledWithConcrete,
     };
 
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(controls));
@@ -466,6 +487,7 @@ export default function Home() {
     kettlebellHandleLengthMm,
     kettlebellPipeOuterDiameterMm,
     kettlebellPipeWallThicknessMm,
+    kettlebellHandleFilledWithConcrete,
     kettlebellSolveMode,
     kettlebellTargetMassKg,
     openingDiameterMm,
@@ -624,6 +646,7 @@ export default function Home() {
       kettlebellHandleEmbedM,
       kettlebellPipeOuterRadiusM,
       kettlebellPipeWallM,
+      kettlebellHandleFilledWithConcrete,
     );
 
     if (solved.error) {
@@ -642,6 +665,7 @@ export default function Home() {
     kettlebellHandleEmbedM,
     kettlebellPipeOuterRadiusM,
     kettlebellPipeWallM,
+    kettlebellHandleFilledWithConcrete,
   );
 
   if (!kettlebellError && kettlebellMetricsResult.error) {
@@ -681,6 +705,7 @@ export default function Home() {
     ) *
     MM_TO_M *
     kettlebellScale;
+  const kbHandleInnerFill = kettlebellHandleFilledWithConcrete ? "#6e7f69" : "rgba(255, 252, 244, 0.9)";
 
   return (
     <main className="page-shell">
@@ -1103,6 +1128,16 @@ export default function Home() {
               <p className="helper">
                 Handle geometry (upside-down square U made from hollow round steel pipe).
               </p>
+              <label className="toggle">
+                <input
+                  checked={kettlebellHandleFilledWithConcrete}
+                  onChange={(event) =>
+                    setKettlebellHandleFilledWithConcrete(event.target.checked)
+                  }
+                  type="checkbox"
+                />
+                <span>Fill handle with concrete</span>
+              </label>
               <Slider
                 label="Top handle length"
                 value={kettlebellHandleLengthMm}
@@ -1231,6 +1266,14 @@ export default function Home() {
                     : "--"}
                 </strong>
               </div>
+              <div>
+                <span>Concrete in handle</span>
+                <strong>
+                  {kettlebellMetrics && !kettlebellError
+                    ? `${round(kettlebellMetrics.concreteInHandleVolumeM3 * KG_TO_G, 2).toFixed(2)} L`
+                    : "--"}
+                </strong>
+              </div>
             </div>
 
             <div className="diagram">
@@ -1254,23 +1297,63 @@ export default function Home() {
                   y2={kbBottomY}
                 />
 
-                <path
-                  d={`M ${kbCx - kbHandleHalfSpanPx} ${kbTopY} L ${kbCx - kbHandleHalfSpanPx} ${kbEmbedY} M ${kbCx + kbHandleHalfSpanPx} ${kbTopY} L ${kbCx + kbHandleHalfSpanPx} ${kbEmbedY} M ${kbCx - kbHandleHalfSpanPx} ${kbTopY} L ${kbCx + kbHandleHalfSpanPx} ${kbTopY}`}
-                  fill="none"
+                <line
                   stroke="#98a7af"
                   strokeLinecap="round"
-                  strokeLinejoin="round"
                   strokeWidth={Math.max(kbPipeOuterPx, 2)}
+                  x1={kbCx - kbHandleHalfSpanPx}
+                  x2={kbCx + kbHandleHalfSpanPx}
+                  y1={kbTopY}
+                  y2={kbTopY}
+                />
+                <line
+                  stroke="#98a7af"
+                  strokeLinecap="butt"
+                  strokeWidth={Math.max(kbPipeOuterPx, 2)}
+                  x1={kbCx - kbHandleHalfSpanPx}
+                  x2={kbCx - kbHandleHalfSpanPx}
+                  y1={kbTopY}
+                  y2={kbEmbedY}
+                />
+                <line
+                  stroke="#98a7af"
+                  strokeLinecap="butt"
+                  strokeWidth={Math.max(kbPipeOuterPx, 2)}
+                  x1={kbCx + kbHandleHalfSpanPx}
+                  x2={kbCx + kbHandleHalfSpanPx}
+                  y1={kbTopY}
+                  y2={kbEmbedY}
                 />
                 {kbPipeInnerPx > 0 ? (
-                  <path
-                    d={`M ${kbCx - kbHandleHalfSpanPx} ${kbTopY} L ${kbCx - kbHandleHalfSpanPx} ${kbEmbedY} M ${kbCx + kbHandleHalfSpanPx} ${kbTopY} L ${kbCx + kbHandleHalfSpanPx} ${kbEmbedY} M ${kbCx - kbHandleHalfSpanPx} ${kbTopY} L ${kbCx + kbHandleHalfSpanPx} ${kbTopY}`}
-                    fill="none"
-                    stroke="rgba(255, 252, 244, 0.9)"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={Math.max(kbPipeInnerPx, 1)}
-                  />
+                  <>
+                    <line
+                      stroke={kbHandleInnerFill}
+                      strokeLinecap="round"
+                      strokeWidth={Math.max(kbPipeInnerPx, 1)}
+                      x1={kbCx - kbHandleHalfSpanPx}
+                      x2={kbCx + kbHandleHalfSpanPx}
+                      y1={kbTopY}
+                      y2={kbTopY}
+                    />
+                    <line
+                      stroke={kbHandleInnerFill}
+                      strokeLinecap="butt"
+                      strokeWidth={Math.max(kbPipeInnerPx, 1)}
+                      x1={kbCx - kbHandleHalfSpanPx}
+                      x2={kbCx - kbHandleHalfSpanPx}
+                      y1={kbTopY}
+                      y2={kbEmbedY}
+                    />
+                    <line
+                      stroke={kbHandleInnerFill}
+                      strokeLinecap="butt"
+                      strokeWidth={Math.max(kbPipeInnerPx, 1)}
+                      x1={kbCx + kbHandleHalfSpanPx}
+                      x2={kbCx + kbHandleHalfSpanPx}
+                      y1={kbTopY}
+                      y2={kbEmbedY}
+                    />
+                  </>
                 ) : null}
               </svg>
             </div>
@@ -1278,7 +1361,7 @@ export default function Home() {
             <div className="formula">
               <p>
                 Concrete body: sphere volume minus a bottom spherical cap (flatten). Embedded leg
-                volume is removed from concrete.
+                volume is removed from concrete, and pipe interior can optionally be concrete-filled.
               </p>
               <p>
                 Handle steel: hollow round-pipe area multiplied by square-U centerline length. In
