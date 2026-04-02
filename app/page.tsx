@@ -1059,24 +1059,27 @@ export default function Home() {
               </button>
             </div>
 
-            <Slider
-              label="Target mass"
-              value={kettlebellTargetMassKg}
-              min={2}
-              max={80}
-              step={0.5}
-              unit=" kg"
-              onChange={setKettlebellTargetMassKg}
-            />
-            <Slider
-              label="Sphere diameter"
-              value={kettlebellDiameterMm}
-              min={90}
-              max={420}
-              step={1}
-              unit=" mm"
-              onChange={setKettlebellDiameterMm}
-            />
+            {kettlebellSolveMode === "diameter" ? (
+              <Slider
+                label="Target mass"
+                value={kettlebellTargetMassKg}
+                min={2}
+                max={80}
+                step={0.5}
+                unit=" kg"
+                onChange={setKettlebellTargetMassKg}
+              />
+            ) : (
+              <Slider
+                label="Sphere diameter"
+                value={kettlebellDiameterMm}
+                min={90}
+                max={420}
+                step={1}
+                unit=" mm"
+                onChange={setKettlebellDiameterMm}
+              />
+            )}
             <Slider
               label="Flatten amount"
               value={kettlebellFlattenMm}
