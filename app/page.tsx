@@ -617,10 +617,15 @@ export default function Home() {
     error = "Steel parts occupy the full plate volume. Reduce steel dimensions.";
   }
 
-  const diagramOuter = 240;
+  const diagramOuter = 220;
   const outerScale = !error && activeOuterRadiusM > 0 ? diagramOuter / activeOuterRadiusM : 0;
+  const plateCx = 260;
+  const plateCy = 286;
+  const plateTopDimY = 46;
+  const plateBottomDimY = 448;
   const holeRadiusPx = holeRadiusM * outerScale;
   const outerRadiusPx = activeOuterRadiusM * outerScale;
+  const rodLengthDimY = plateCy + outerRadiusPx + 20;
   const innerRingOuterPx = (holeRadiusM + innerRingThicknessM) * outerScale;
   const outerRingInnerPx = (activeOuterRadiusM - outerRingThicknessM) * outerScale;
   const reinforcementStartPx = reinforcementStartRadiusM * outerScale;
@@ -1016,22 +1021,22 @@ export default function Home() {
                   </marker>
                 </defs>
                 <rect fill="transparent" height="520" width="520" x="0" y="0" />
-                <circle cx="260" cy="260" fill="#6e7f69" r={outerRadiusPx} />
+                <circle cx={plateCx} cy={plateCy} fill="#6e7f69" r={outerRadiusPx} />
                 {outerRingEnabled && !error ? (
                   <circle
-                    cx="260"
-                    cy="260"
+                    cx={plateCx}
+                    cy={plateCy}
                     fill="none"
                     r={(outerRadiusPx + outerRingInnerPx) / 2}
                     stroke="#cad5c2"
                     strokeWidth={Math.max(outerRadiusPx - outerRingInnerPx, 1)}
                   />
                 ) : null}
-                <circle cx="260" cy="260" fill="#152018" r={holeRadiusPx} />
+                <circle cx={plateCx} cy={plateCy} fill="#152018" r={holeRadiusPx} />
                 {innerRingEnabled && !error ? (
                   <circle
-                    cx="260"
-                    cy="260"
+                    cx={plateCx}
+                    cy={plateCy}
                     fill="none"
                     r={(holeRadiusPx + innerRingOuterPx) / 2}
                     stroke="#d3ddcb"
@@ -1045,12 +1050,12 @@ export default function Home() {
                         <line
                           key={angle}
                           stroke="#f18f01"
-                          strokeLinecap="round"
+                          strokeLinecap="butt"
                           strokeWidth={reinforcementStrokePx}
-                          x1={260 + Math.cos(angle) * reinforcementStartPx}
-                          x2={260 + Math.cos(angle) * reinforcementEndPx}
-                          y1={260 + Math.sin(angle) * reinforcementStartPx}
-                          y2={260 + Math.sin(angle) * reinforcementEndPx}
+                          x1={plateCx + Math.cos(angle) * reinforcementStartPx}
+                          x2={plateCx + Math.cos(angle) * reinforcementEndPx}
+                          y1={plateCy + Math.sin(angle) * reinforcementStartPx}
+                          y2={plateCy + Math.sin(angle) * reinforcementEndPx}
                         />
                       );
                     })
@@ -1060,8 +1065,8 @@ export default function Home() {
                       const angle = (index / reinforcementCount) * Math.PI * 2;
                       return (
                         <circle
-                          cx={260 + Math.cos(angle) * reinforcementStartPx}
-                          cy={260 + Math.sin(angle) * reinforcementStartPx}
+                          cx={plateCx + Math.cos(angle) * reinforcementStartPx}
+                          cy={plateCy + Math.sin(angle) * reinforcementStartPx}
                           fill="#f18f01"
                           key={angle}
                           r={reinforcementStrokePx / 2}
@@ -1075,37 +1080,37 @@ export default function Home() {
                       stroke="#2b3f32"
                       strokeDasharray="5 4"
                       strokeWidth="1.5"
-                      x1={260 - outerRadiusPx}
-                      x2={260 - outerRadiusPx}
-                      y1={260}
-                      y2={74}
+                      x1={plateCx - outerRadiusPx}
+                      x2={plateCx - outerRadiusPx}
+                      y1={plateCy}
+                      y2={plateTopDimY}
                     />
                     <line
                       stroke="#2b3f32"
                       strokeDasharray="5 4"
                       strokeWidth="1.5"
-                      x1={260 + outerRadiusPx}
-                      x2={260 + outerRadiusPx}
-                      y1={260}
-                      y2={74}
+                      x1={plateCx + outerRadiusPx}
+                      x2={plateCx + outerRadiusPx}
+                      y1={plateCy}
+                      y2={plateTopDimY}
                     />
                     <line
                       markerEnd="url(#plate-arrow)"
                       markerStart="url(#plate-arrow)"
                       stroke="#2b3f32"
                       strokeWidth="2"
-                      x1={260 - outerRadiusPx}
-                      x2={260 + outerRadiusPx}
-                      y1={74}
-                      y2={74}
+                      x1={plateCx - outerRadiusPx}
+                      x2={plateCx + outerRadiusPx}
+                      y1={plateTopDimY}
+                      y2={plateTopDimY}
                     />
                     <text
                       fill="#1e2f24"
                       fontFamily="var(--font-mono), monospace"
                       fontSize="14"
                       textAnchor="middle"
-                      x="260"
-                      y="66"
+                      x={plateCx}
+                      y={plateTopDimY - 8}
                     >
                       {formatMm(plateOuterDiameterMm)}
                     </text>
@@ -1114,40 +1119,83 @@ export default function Home() {
                       stroke="#2b3f32"
                       strokeDasharray="5 4"
                       strokeWidth="1.5"
-                      x1={260 - holeRadiusPx}
-                      x2={260 - holeRadiusPx}
-                      y1={260}
-                      y2={446}
+                      x1={plateCx - holeRadiusPx}
+                      x2={plateCx - holeRadiusPx}
+                      y1={plateCy}
+                      y2={plateBottomDimY}
                     />
                     <line
                       stroke="#2b3f32"
                       strokeDasharray="5 4"
                       strokeWidth="1.5"
-                      x1={260 + holeRadiusPx}
-                      x2={260 + holeRadiusPx}
-                      y1={260}
-                      y2={446}
+                      x1={plateCx + holeRadiusPx}
+                      x2={plateCx + holeRadiusPx}
+                      y1={plateCy}
+                      y2={plateBottomDimY}
                     />
                     <line
                       markerEnd="url(#plate-arrow)"
                       markerStart="url(#plate-arrow)"
                       stroke="#2b3f32"
                       strokeWidth="2"
-                      x1={260 - holeRadiusPx}
-                      x2={260 + holeRadiusPx}
-                      y1={446}
-                      y2={446}
+                      x1={plateCx - holeRadiusPx}
+                      x2={plateCx + holeRadiusPx}
+                      y1={plateBottomDimY}
+                      y2={plateBottomDimY}
                     />
                     <text
                       fill="#1e2f24"
                       fontFamily="var(--font-mono), monospace"
                       fontSize="14"
                       textAnchor="middle"
-                      x="260"
-                      y="465"
+                      x={plateCx}
+                      y={plateBottomDimY + 19}
                     >
                       {formatMm(openingDiameterMm)}
                     </text>
+
+                    {reinforcementEnabled && reinforcementLengthM > 0 ? (
+                      <>
+                        <line
+                          stroke="#f18f01"
+                          strokeDasharray="5 4"
+                          strokeWidth="1.5"
+                          x1={plateCx + reinforcementStartPx}
+                          x2={plateCx + reinforcementStartPx}
+                          y1={plateCy}
+                          y2={rodLengthDimY}
+                        />
+                        <line
+                          stroke="#f18f01"
+                          strokeDasharray="5 4"
+                          strokeWidth="1.5"
+                          x1={plateCx + reinforcementEndPx}
+                          x2={plateCx + reinforcementEndPx}
+                          y1={plateCy}
+                          y2={rodLengthDimY}
+                        />
+                        <line
+                          markerEnd="url(#plate-arrow)"
+                          markerStart="url(#plate-arrow)"
+                          stroke="#f18f01"
+                          strokeWidth="2"
+                          x1={plateCx + reinforcementStartPx}
+                          x2={plateCx + reinforcementEndPx}
+                          y1={rodLengthDimY}
+                          y2={rodLengthDimY}
+                        />
+                        <text
+                          fill="#c16d00"
+                          fontFamily="var(--font-mono), monospace"
+                          fontSize="13"
+                          textAnchor="middle"
+                          x={plateCx + (reinforcementStartPx + reinforcementEndPx) / 2}
+                          y={rodLengthDimY - 8}
+                        >
+                          {formatMm(reinforcementLengthMm)}
+                        </text>
+                      </>
+                    ) : null}
                   </>
                 ) : null}
               </svg>
