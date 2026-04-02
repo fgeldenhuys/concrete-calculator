@@ -576,6 +576,7 @@ export default function Home() {
   const activeOuterDiameterCm = solveMode === "width" ? outerDiameterCm : solvedOuterDiameterCm;
   const activeWidthMm = activeWidthM / MM_TO_M;
   const outerCircumferenceM = 2 * Math.PI * activeOuterRadiusM;
+  const plateOuterDiameterMm = activeOuterDiameterCm * 10;
 
   if (!error && activeOuterRadiusM <= holeRadiusM) {
     error = "Outer diameter must be larger than the inner opening.";
@@ -679,10 +680,21 @@ export default function Home() {
   const activeKettlebellBaseDiameterMm =
     kettlebellMetrics && !kettlebellError ? (kettlebellMetrics.baseRadiusM / MM_TO_M) * 2 : 0;
 
+  const kbTopPaddingPx = 72;
+  const kbBottomPaddingPx = 36;
+  const kbUsableHeightPx = 520 - kbTopPaddingPx - kbBottomPaddingPx;
+  const kbMaxUpM = activeKettlebellRadiusM + kettlebellHandleHeightM;
+  const kbMaxDownM = activeKettlebellRadiusM;
+  const kbFitScaleFromHeight =
+    !kettlebellError && kbMaxUpM + kbMaxDownM > 0
+      ? kbUsableHeightPx / (kbMaxUpM + kbMaxDownM)
+      : 0;
   const kettlebellScale =
-    !kettlebellError && activeKettlebellRadiusM > 0 ? 165 / activeKettlebellRadiusM : 0;
+    !kettlebellError && activeKettlebellRadiusM > 0
+      ? Math.min(165 / activeKettlebellRadiusM, kbFitScaleFromHeight)
+      : 0;
   const kbCx = 260;
-  const kbCy = 300;
+  const kbCy = kbTopPaddingPx + kbMaxUpM * kettlebellScale;
   const kbRadiusPx = activeKettlebellRadiusM * kettlebellScale;
   const kbFlattenPx = kettlebellFlattenM * kettlebellScale;
   const kbBottomY = kbCy + kbRadiusPx - kbFlattenPx;
@@ -706,6 +718,9 @@ export default function Home() {
     MM_TO_M *
     kettlebellScale;
   const kbHandleInnerFill = kettlebellHandleFilledWithConcrete ? "#6e7f69" : "rgba(255, 252, 244, 0.9)";
+  const kbRawBottomY = kbCy + kbRadiusPx;
+  const kbHandleTopDimY = kbTopY - 30;
+  const kbHandleLegCenterlineMm = (kettlebellHandleHeightM + kettlebellHandleEmbedM) / MM_TO_M;
 
   return (
     <main className="page-shell">
@@ -988,6 +1003,18 @@ export default function Home() {
 
             <div className="diagram">
               <svg aria-label="Weight plate cross-section" viewBox="0 0 520 520" role="img">
+                <defs>
+                  <marker
+                    id="plate-arrow"
+                    markerHeight="6"
+                    markerWidth="6"
+                    orient="auto-start-reverse"
+                    refX="5"
+                    refY="3"
+                  >
+                    <path d="M 0 0 L 6 3 L 0 6 z" fill="#2b3f32" />
+                  </marker>
+                </defs>
                 <rect fill="transparent" height="520" width="520" x="0" y="0" />
                 <circle cx="260" cy="260" fill="#6e7f69" r={outerRadiusPx} />
                 {outerRingEnabled && !error ? (
@@ -1042,6 +1069,87 @@ export default function Home() {
                       );
                     })
                   : null}
+                {!error ? (
+                  <>
+                    <line
+                      stroke="#2b3f32"
+                      strokeDasharray="5 4"
+                      strokeWidth="1.5"
+                      x1={260 - outerRadiusPx}
+                      x2={260 - outerRadiusPx}
+                      y1={260}
+                      y2={74}
+                    />
+                    <line
+                      stroke="#2b3f32"
+                      strokeDasharray="5 4"
+                      strokeWidth="1.5"
+                      x1={260 + outerRadiusPx}
+                      x2={260 + outerRadiusPx}
+                      y1={260}
+                      y2={74}
+                    />
+                    <line
+                      markerEnd="url(#plate-arrow)"
+                      markerStart="url(#plate-arrow)"
+                      stroke="#2b3f32"
+                      strokeWidth="2"
+                      x1={260 - outerRadiusPx}
+                      x2={260 + outerRadiusPx}
+                      y1={74}
+                      y2={74}
+                    />
+                    <text
+                      fill="#1e2f24"
+                      fontFamily="var(--font-mono), monospace"
+                      fontSize="14"
+                      textAnchor="middle"
+                      x="260"
+                      y="66"
+                    >
+                      {formatMm(plateOuterDiameterMm)}
+                    </text>
+
+                    <line
+                      stroke="#2b3f32"
+                      strokeDasharray="5 4"
+                      strokeWidth="1.5"
+                      x1={260 - holeRadiusPx}
+                      x2={260 - holeRadiusPx}
+                      y1={260}
+                      y2={446}
+                    />
+                    <line
+                      stroke="#2b3f32"
+                      strokeDasharray="5 4"
+                      strokeWidth="1.5"
+                      x1={260 + holeRadiusPx}
+                      x2={260 + holeRadiusPx}
+                      y1={260}
+                      y2={446}
+                    />
+                    <line
+                      markerEnd="url(#plate-arrow)"
+                      markerStart="url(#plate-arrow)"
+                      stroke="#2b3f32"
+                      strokeWidth="2"
+                      x1={260 - holeRadiusPx}
+                      x2={260 + holeRadiusPx}
+                      y1={446}
+                      y2={446}
+                    />
+                    <text
+                      fill="#1e2f24"
+                      fontFamily="var(--font-mono), monospace"
+                      fontSize="14"
+                      textAnchor="middle"
+                      x="260"
+                      y="465"
+                    >
+                      {formatMm(openingDiameterMm)}
+                    </text>
+                  </>
+                ) : null}
               </svg>
             </div>
 
@@ -1211,7 +1319,7 @@ export default function Home() {
                 <span>Handle centerline length</span>
                 <strong>
                   {kettlebellMetrics && !kettlebellError
-                    ? formatMeters(kettlebellMetrics.handleLengthM)
+                    ? formatMm(kettlebellMetrics.handleLengthM / MM_TO_M)
                     : "--"}
                 </strong>
               </div>
@@ -1278,6 +1386,18 @@ export default function Home() {
 
             <div className="diagram">
               <svg aria-label="Kettlebell side profile" viewBox="0 0 520 520" role="img">
+                <defs>
+                  <marker
+                    id="kb-arrow"
+                    markerHeight="6"
+                    markerWidth="6"
+                    orient="auto-start-reverse"
+                    refX="5"
+                    refY="3"
+                  >
+                    <path d="M 0 0 L 6 3 L 0 6 z" fill="#2b3f32" />
+                  </marker>
+                </defs>
                 <rect fill="transparent" height="520" width="520" x="0" y="0" />
                 <circle cx={kbCx} cy={kbCy} fill="#6e7f69" r={kbRadiusPx} />
                 <rect
@@ -1353,6 +1473,243 @@ export default function Home() {
                       y1={kbTopY}
                       y2={kbEmbedY}
                     />
+                  </>
+                ) : null}
+                {!kettlebellError ? (
+                  <>
+                    <line
+                      stroke="#2b3f32"
+                      strokeDasharray="5 4"
+                      strokeWidth="1.5"
+                      x1={kbCx - kbRadiusPx}
+                      x2={kbCx - kbRadiusPx}
+                      y1={kbCy}
+                      y2="458"
+                    />
+                    <line
+                      stroke="#2b3f32"
+                      strokeDasharray="5 4"
+                      strokeWidth="1.5"
+                      x1={kbCx + kbRadiusPx}
+                      x2={kbCx + kbRadiusPx}
+                      y1={kbCy}
+                      y2="458"
+                    />
+                    <line
+                      markerEnd="url(#kb-arrow)"
+                      markerStart="url(#kb-arrow)"
+                      stroke="#2b3f32"
+                      strokeWidth="2"
+                      x1={kbCx - kbRadiusPx}
+                      x2={kbCx + kbRadiusPx}
+                      y1="458"
+                      y2="458"
+                    />
+                    <text
+                      fill="#1e2f24"
+                      fontFamily="var(--font-mono), monospace"
+                      fontSize="14"
+                      textAnchor="middle"
+                      x={kbCx}
+                      y="478"
+                    >
+                      {formatMm(activeKettlebellDiameterMm)}
+                    </text>
+
+                    <line
+                      stroke="#2b3f32"
+                      strokeDasharray="5 4"
+                      strokeWidth="1.5"
+                      x1={kbCx - kbHandleHalfSpanPx}
+                      x2={kbCx - kbHandleHalfSpanPx}
+                      y1={kbTopY}
+                      y2={kbHandleTopDimY}
+                    />
+                    <line
+                      stroke="#2b3f32"
+                      strokeDasharray="5 4"
+                      strokeWidth="1.5"
+                      x1={kbCx + kbHandleHalfSpanPx}
+                      x2={kbCx + kbHandleHalfSpanPx}
+                      y1={kbTopY}
+                      y2={kbHandleTopDimY}
+                    />
+                    <line
+                      markerEnd="url(#kb-arrow)"
+                      markerStart="url(#kb-arrow)"
+                      stroke="#2b3f32"
+                      strokeWidth="2"
+                      x1={kbCx - kbHandleHalfSpanPx}
+                      x2={kbCx + kbHandleHalfSpanPx}
+                      y1={kbHandleTopDimY}
+                      y2={kbHandleTopDimY}
+                    />
+                    <text
+                      fill="#1e2f24"
+                      fontFamily="var(--font-mono), monospace"
+                      fontSize="14"
+                      textAnchor="middle"
+                      x={kbCx}
+                      y={kbHandleTopDimY - 8}
+                    >
+                      {formatMm(kettlebellHandleLengthMm)}
+                    </text>
+
+                    <line
+                      stroke="#2b3f32"
+                      strokeDasharray="5 4"
+                      strokeWidth="1.5"
+                      x1="72"
+                      x2={kbCx - kbHandleHalfSpanPx}
+                      y1={kbTopY}
+                      y2={kbTopY}
+                    />
+                    <line
+                      stroke="#2b3f32"
+                      strokeDasharray="5 4"
+                      strokeWidth="1.5"
+                      x1="72"
+                      x2={kbCx - kbHandleHalfSpanPx}
+                      y1={kbEntryY}
+                      y2={kbEntryY}
+                    />
+                    <line
+                      markerEnd="url(#kb-arrow)"
+                      markerStart="url(#kb-arrow)"
+                      stroke="#2b3f32"
+                      strokeWidth="2"
+                      x1="72"
+                      x2="72"
+                      y1={kbTopY}
+                      y2={kbEntryY}
+                    />
+                    <text
+                      fill="#1e2f24"
+                      fontFamily="var(--font-mono), monospace"
+                      fontSize="12"
+                      textAnchor="start"
+                      x="12"
+                      y={(kbTopY + kbEntryY) / 2 - 2}
+                    >
+                      {formatMm(kettlebellHandleHeightMm)}
+                    </text>
+
+                    <line
+                      stroke="#2b3f32"
+                      strokeDasharray="5 4"
+                      strokeWidth="1.5"
+                      x1="72"
+                      x2={kbCx - kbHandleHalfSpanPx}
+                      y1={kbEntryY}
+                      y2={kbEntryY}
+                    />
+                    <line
+                      stroke="#2b3f32"
+                      strokeDasharray="5 4"
+                      strokeWidth="1.5"
+                      x1="72"
+                      x2={kbCx - kbHandleHalfSpanPx}
+                      y1={kbEmbedY}
+                      y2={kbEmbedY}
+                    />
+                    <line
+                      markerEnd="url(#kb-arrow)"
+                      markerStart="url(#kb-arrow)"
+                      stroke="#2b3f32"
+                      strokeWidth="2"
+                      x1="72"
+                      x2="72"
+                      y1={kbEntryY}
+                      y2={kbEmbedY}
+                    />
+                    <text
+                      fill="#1e2f24"
+                      fontFamily="var(--font-mono), monospace"
+                      fontSize="12"
+                      textAnchor="start"
+                      x="8"
+                      y={(kbEntryY + kbEmbedY) / 2 + 4}
+                    >
+                      {formatMm(kettlebellHandleEmbedMm)}
+                    </text>
+
+                    <line
+                      stroke="#1f4a3a"
+                      strokeDasharray="4 4"
+                      strokeWidth="1.5"
+                      x1={kbCx + kbHandleHalfSpanPx}
+                      x2="474"
+                      y1={kbTopY}
+                      y2={kbTopY}
+                    />
+                    <line
+                      stroke="#1f4a3a"
+                      strokeDasharray="4 4"
+                      strokeWidth="1.5"
+                      x1={kbCx + kbHandleHalfSpanPx}
+                      x2="474"
+                      y1={kbEmbedY}
+                      y2={kbEmbedY}
+                    />
+                    <line
+                      markerEnd="url(#kb-arrow)"
+                      markerStart="url(#kb-arrow)"
+                      stroke="#1f4a3a"
+                      strokeWidth="2"
+                      x1="474"
+                      x2="474"
+                      y1={kbTopY}
+                      y2={kbEmbedY}
+                    />
+                    <text
+                      fill="#1f4a3a"
+                      fontFamily="var(--font-mono), monospace"
+                      fontSize="11"
+                      textAnchor="end"
+                      x="468"
+                      y={(kbTopY + kbEmbedY) / 2 + 2}
+                    >
+                      {formatMm(kbHandleLegCenterlineMm)}
+                    </text>
+
+                    <line
+                      stroke="#2b3f32"
+                      strokeDasharray="5 4"
+                      strokeWidth="1.5"
+                      x1="450"
+                      x2={kbCx + kbRadiusPx}
+                      y1={kbRawBottomY}
+                      y2={kbRawBottomY}
+                    />
+                    <line
+                      stroke="#2b3f32"
+                      strokeDasharray="5 4"
+                      strokeWidth="1.5"
+                      x1="450"
+                      x2={kbCx + kbRadiusPx}
+                      y1={kbBottomY}
+                      y2={kbBottomY}
+                    />
+                    <line
+                      markerEnd="url(#kb-arrow)"
+                      markerStart="url(#kb-arrow)"
+                      stroke="#2b3f32"
+                      strokeWidth="2"
+                      x1="450"
+                      x2="450"
+                      y1={kbRawBottomY}
+                      y2={kbBottomY}
+                    />
+                    <text
+                      fill="#1e2f24"
+                      fontFamily="var(--font-mono), monospace"
+                      fontSize="14"
+                      textAnchor="start"
+                      x="458"
+                      y={(kbRawBottomY + kbBottomY) / 2 + 4}
+                    >
+                      {formatMm(activeKettlebellFlattenMm)}
+                    </text>
                   </>
                 ) : null}
               </svg>
