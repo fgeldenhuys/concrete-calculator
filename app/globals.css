@@ -39,6 +39,17 @@ input {
   padding: 2rem 0 4rem;
 }
 
+.tab-switch {
+  max-width: 420px;
+  margin: 0 0 1.4rem;
+  background: rgba(21, 32, 24, 0.1);
+}
+
+.tab-switch button {
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
 .hero {
   display: grid;
   grid-template-columns: 1.4fr 1fr;
@@ -303,6 +314,10 @@ input {
   .page-shell {
     width: min(100% - 1rem, 1200px);
     padding-top: 1rem;
+  }
+
+  .tab-switch {
+    max-width: none;
   }
 
   .panel {
