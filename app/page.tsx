@@ -625,7 +625,7 @@ export default function Home() {
   const plateBottomDimY = 448;
   const holeRadiusPx = holeRadiusM * outerScale;
   const outerRadiusPx = activeOuterRadiusM * outerScale;
-  const rodLengthDimY = plateCy + outerRadiusPx + 20;
+  const rodLengthDimY = Math.min(plateCy + outerRadiusPx + 8, 510);
   const innerRingOuterPx = (holeRadiusM + innerRingThicknessM) * outerScale;
   const outerRingInnerPx = (activeOuterRadiusM - outerRingThicknessM) * outerScale;
   const reinforcementStartPx = reinforcementStartRadiusM * outerScale;
@@ -1019,6 +1019,16 @@ export default function Home() {
                   >
                     <path d="M 0 0 L 6 3 L 0 6 z" fill="#2b3f32" />
                   </marker>
+                  <marker
+                    id="plate-arrow-rod"
+                    markerHeight="6"
+                    markerWidth="6"
+                    orient="auto-start-reverse"
+                    refX="5"
+                    refY="3"
+                  >
+                    <path d="M 0 0 L 6 3 L 0 6 z" fill="#f18f01" />
+                  </marker>
                 </defs>
                 <rect fill="transparent" height="520" width="520" x="0" y="0" />
                 <circle cx={plateCx} cy={plateCy} fill="#6e7f69" r={outerRadiusPx} />
@@ -1175,10 +1185,11 @@ export default function Home() {
                           y2={rodLengthDimY}
                         />
                         <line
-                          markerEnd="url(#plate-arrow)"
-                          markerStart="url(#plate-arrow)"
+                          markerEnd="url(#plate-arrow-rod)"
+                          markerStart="url(#plate-arrow-rod)"
                           stroke="#f18f01"
                           strokeWidth="2"
+                          strokeLinecap="butt"
                           x1={plateCx + reinforcementStartPx}
                           x2={plateCx + reinforcementEndPx}
                           y1={rodLengthDimY}
